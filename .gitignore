@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtualenv / Pipenv
+.env
+.venv
+env/
+venv/
+Pipfile.lock
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+*.log
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Coverage / Testing
+.coverage
+htmlcov/
+.pytest_cache/
