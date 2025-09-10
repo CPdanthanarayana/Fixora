@@ -8,6 +8,8 @@ django = "*"
 djangorestframework = "*"
 djangorestframework-simplejwt = {extras = ["blacklist"], version = "*"}
 django-filter = "*"
+channels = "*"
+channels-redis = "*"
 
 [dev-packages]
 

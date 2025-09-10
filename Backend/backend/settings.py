@@ -41,8 +41,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
+    'channels',
     'users',
     'jobs',
+    'issues',
+    'chat',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -65,6 +68,18 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+#Chat setup
+ASGI_APPLICATION = "backend.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
 }
 
 
