@@ -1,8 +1,8 @@
 # chat/models.py
 from django.db import models
 from django.conf import settings
-from Backend.jobs.models import Job
-from Backend.issues.models import Issue
+from jobs.models import Job
+from issues.models import Issue
 
 User = settings.AUTH_USER_MODEL
 
