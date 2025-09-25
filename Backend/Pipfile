@@ -5,9 +5,10 @@ name = "pypi"
 
 [packages]
 django = "*"
-djangorestframework = "*"
-djangorestframework-simplejwt = {extras = ["blacklist"], version = "*"}
 django-filter = "*"
+djangorestframework = "*"
+djangorestframework-simplejwt = "*"
+django-cors-headers = "*"
 channels = "*"
 channels-redis = "*"
 

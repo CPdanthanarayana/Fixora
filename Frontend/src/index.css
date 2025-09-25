@@ -1,2 +1,21 @@
 @import "@fontsource/inter/index.css"; 
+
 @import "tailwindcss";
+
+@layer base {
+  html {
+    font-family: 'Inter', sans-serif;
+    background-color: theme('colors.gray.50');
+    color: theme('colors.gray.800');
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition;
+  }
+}
