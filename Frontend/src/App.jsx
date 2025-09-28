@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -11,13 +11,22 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 
 function App() {
+  const location = useLocation();
+  const isHome = location.pathname === "/"; // check if current page is home
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-800">
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-50 text-gray-800">
       {/* Navbar */}
       <Navbar />
 
       {/* Main content */}
-      <main className="flex-1 container mx-auto px-4 py-6">
+      <main
+        className={
+          isHome
+            ? "flex-1 flex" // full height and width for home
+            : "flex-1 container mx-auto px-4 py-6 overflow-auto" // scrollable container for other pages
+        }
+      >
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/jobs" element={<Jobs />} />

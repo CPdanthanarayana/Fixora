@@ -1,23 +1,39 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
 import JobCard from "../components/JobCard";
+import JobForm from "../components/JobForm";
 
 export default function Jobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const { token } = useAuth();
 
   // Fetch jobs from backend
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await fetch("/api/jobs/");
-        if (!response.ok) {
-          throw new Error("Failed to fetch jobs");
+        const response = await fetch("http://localhost:8000/api/jobs/");
+        const textResponse = await response.text();
+        console.log("Fetch response:", textResponse);
+
+        let data;
+        try {
+          data = JSON.parse(textResponse);
+        } catch (e) {
+          console.error("Failed to parse jobs response:", textResponse);
+          throw new Error("Invalid response from server");
         }
-        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "Failed to fetch jobs");
+        }
+
         setJobs(data);
         setLoading(false);
       } catch (err) {
+        console.error("Fetch error:", err);
         setError(err.message);
         setLoading(false);
       }
@@ -31,31 +47,44 @@ export default function Jobs() {
     // Later → open ChatPopup
   };
 
-  const handleAddJob = async () => {
+  const handleAddJob = async (formData) => {
     try {
-      const response = await fetch("/api/jobs/", {
+      console.log("Sending job data:", formData);
+      const response = await fetch("http://localhost:8000/api/jobs/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Add your authentication token here
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          title: "New Job",
-          description: "Job description",
+          ...formData,
           status: "open",
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create job");
+      const textResponse = await response.text();
+      console.log("Server response:", textResponse);
+
+      let data;
+      try {
+        data = JSON.parse(textResponse);
+      } catch (e) {
+        console.error("Failed to parse response as JSON:", textResponse);
+        throw new Error("Server sent an invalid response");
       }
 
-      const newJob = await response.json();
-      setJobs([newJob, ...jobs]);
+      if (!response.ok) {
+        const errorMessage =
+          data.detail || data.message || "Failed to create job";
+        console.error("Server error:", data);
+        throw new Error(errorMessage);
+      }
+
+      setJobs([data, ...jobs]);
+      alert("Job created successfully!");
     } catch (err) {
       console.error("Error creating job:", err);
-      alert("Failed to create job. Please try again.");
+      alert(err.message || "Failed to create job. Please try again.");
     }
   };
 
@@ -64,7 +93,7 @@ export default function Jobs() {
       {/* Add Job Button */}
       <div className="flex justify-end mb-6">
         <button
-          onClick={handleAddJob}
+          onClick={() => setShowForm(true)}
           className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow hover:opacity-90 transition"
         >
           + Add Job
@@ -77,6 +106,15 @@ export default function Jobs() {
           <JobCard key={job.id} job={job} onChat={handleChat} />
         ))}
       </div>
+
+      <JobForm
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        onSubmit={async (formData) => {
+          await handleAddJob(formData);
+          setShowForm(false);
+        }}
+      />
     </div>
   );
 }

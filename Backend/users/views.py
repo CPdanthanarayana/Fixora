@@ -26,15 +26,32 @@ class LoginView(APIView):
         email = request.data.get("email")
         password = request.data.get("password")
 
-        user = authenticate(request, email=email, password=password)
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-                "user": UserSerializer(user).data
-            })
-        return Response({"error": "Invalid Credentials"}, status=400)
+        if not email or not password:
+            return Response(
+                {"error": "Both email and password are required"},
+                status=400
+            )
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "No account found with this email"},
+                status=400
+            )
+
+        if not user.check_password(password):
+            return Response(
+                {"error": "Invalid password"},
+                status=400
+            )
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "user": UserSerializer(user).data
+        })
 
 # Logout (Blacklist refresh token)
 class LogoutView(APIView):

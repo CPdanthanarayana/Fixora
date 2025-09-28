@@ -4,6 +4,9 @@ from rest_framework import generics, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
 
+from rest_framework.response import Response
+from rest_framework import status
+
 class JobListCreateView(generics.ListCreateAPIView):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
@@ -15,8 +18,37 @@ class JobListCreateView(generics.ListCreateAPIView):
     ordering_fields = ["created_at", "updated_at"]
     ordering = ["-created_at"]                   # default newest first
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        try:
+            # Get or create the category
+            category_name = request.data.get('category')
+            if not category_name:
+                return Response(
+                    {'detail': 'Category is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Create the job with the category
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            category, _ = ServiceCategory.objects.get_or_create(name=category_name)
+            self.perform_create(serializer, category)
+
+            headers = self.get_success_headers(serializer.data)
+            return Response(
+                serializer.data, 
+                status=status.HTTP_201_CREATED,
+                headers=headers
+            )
+        except Exception as e:
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def perform_create(self, serializer, category):
+        serializer.save(created_by=self.request.user, category=category)
 
 
 

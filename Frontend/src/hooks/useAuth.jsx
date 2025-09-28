@@ -6,28 +6,32 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [user, setUser] = useState(null);
 
-  const login = async (username, password) => {
+  const login = async (email, password) => {
     try {
-      const response = await fetch("/api/users/login/", {
+      console.log("Sending login request with:", { email, password });
+      const response = await fetch("http://localhost:8000/api/users/login/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
+      const data = await response.json();
+      console.log("Login response:", data);
+
       if (!response.ok) {
-        throw new Error("Login failed");
+        const errorMessage = data.error || data.detail || "Login failed";
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json();
       localStorage.setItem("token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
       setToken(data.access);
       return true;
     } catch (error) {
       console.error("Login error:", error);
-      return false;
+      throw error;
     }
   };
 
@@ -43,13 +47,16 @@ export const AuthProvider = ({ children }) => {
       const refresh = localStorage.getItem("refresh_token");
       if (!refresh) return false;
 
-      const response = await fetch("/api/users/token/refresh/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refresh }),
-      });
+      const response = await fetch(
+        "http://localhost:8000/api/users/token/refresh/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refresh }),
+        }
+      );
 
       if (!response.ok) throw new Error("Token refresh failed");
 
@@ -66,7 +73,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
-      fetch("/api/users/profile/", {
+      fetch("http://localhost:8000/api/users/profile/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
