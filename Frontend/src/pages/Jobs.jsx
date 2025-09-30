@@ -1,35 +1,123 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import JobCard from "../components/JobCard";
 import JobForm from "../components/JobForm";
+import JobChatPopup from "../components/JobChatPopup";
 
 export default function Jobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const { token } = useAuth();
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+  const { token, refreshToken } = useAuth();
+  const navigate = useNavigate();
+
+  // Function to make API request with token
+  const makeRequest = async (currentToken, formData) => {
+    const response = await fetch("http://localhost:8000/api/jobs/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentToken}`,
+      },
+      body: JSON.stringify({
+        ...formData,
+        salary: formData.salary ? formData.salary.toString() : "",
+        status: "open",
+      }),
+    });
+
+    if (response.status === 401) {
+      throw new Error("token_expired");
+    }
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || data.message || "Failed to create job");
+    }
+
+    return data;
+  };
+
+  // Check for auto-open chat from notifications
+  useEffect(() => {
+    const jobIdToOpen = sessionStorage.getItem("openJobChat");
+    if (jobIdToOpen && jobs.length > 0) {
+      const job = jobs.find((j) => j.id.toString() === jobIdToOpen);
+      if (job) {
+        handleChat(job);
+        sessionStorage.removeItem("openJobChat");
+      }
+    }
+  }, [jobs]);
 
   // Fetch jobs from backend
   useEffect(() => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     const fetchJobs = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/jobs/");
-        const textResponse = await response.text();
-        console.log("Fetch response:", textResponse);
+        const response = await fetch("http://localhost:8000/api/jobs/", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         let data;
         try {
-          data = JSON.parse(textResponse);
+          data = await response.json();
         } catch (e) {
-          console.error("Failed to parse jobs response:", textResponse);
+          console.error("Failed to parse response:", e);
           throw new Error("Invalid response from server");
+        }
+
+        if (response.status === 401) {
+          // Token expired, try to refresh
+          const refreshed = await refreshToken();
+          if (refreshed) {
+            // Retry with new token
+            const newToken = localStorage.getItem("token");
+            const newResponse = await fetch("http://localhost:8000/api/jobs/", {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${newToken}`,
+              },
+            });
+
+            let newData;
+            try {
+              newData = await newResponse.json();
+            } catch (e) {
+              console.error("Failed to parse response after token refresh:", e);
+              throw new Error(
+                "Invalid response from server after token refresh"
+              );
+            }
+
+            if (!newResponse.ok) {
+              throw new Error(newData.detail || "Failed to fetch jobs");
+            }
+            setJobs(newData);
+            setLoading(false);
+            return;
+          } else {
+            navigate("/login");
+            return;
+          }
         }
 
         if (!response.ok) {
           throw new Error(data.detail || "Failed to fetch jobs");
         }
 
+        console.log("Received jobs:", data);
         setJobs(data);
         setLoading(false);
       } catch (err) {
@@ -40,51 +128,80 @@ export default function Jobs() {
     };
 
     fetchJobs();
-  }, []);
+  }, [token, navigate, refreshToken]);
 
   const handleChat = (job) => {
-    alert(`Open chat with job: ${job.title}`);
-    // Later → open ChatPopup
+    setSelectedJob(job);
+    setShowChat(true);
   };
 
   const handleAddJob = async (formData) => {
     try {
-      console.log("Sending job data:", formData);
-      const response = await fetch("http://localhost:8000/api/jobs/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...formData,
-          status: "open",
-        }),
-      });
+      const makeRequest = async (currentToken) => {
+        const response = await fetch("http://localhost:8000/api/jobs/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${currentToken}`,
+          },
+          body: JSON.stringify({
+            ...formData,
+            salary: formData.salary ? formData.salary.toString() : "",
+            status: "open",
+          }),
+        });
 
-      const textResponse = await response.text();
-      console.log("Server response:", textResponse);
+        const data = await response.json();
 
-      let data;
+        if (response.status === 401) {
+          // Token expired
+          throw new Error("token_expired");
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            data.detail || data.message || "Failed to create job"
+          );
+        }
+
+        return data;
+      };
+
       try {
-        data = JSON.parse(textResponse);
-      } catch (e) {
-        console.error("Failed to parse response as JSON:", textResponse);
-        throw new Error("Server sent an invalid response");
-      }
+        // First attempt with current token
+        const data = await makeRequest(token, formData);
+        setJobs([data, ...jobs]);
+        alert("Job created successfully!");
+        return true;
+      } catch (error) {
+        if (error.message === "token_expired") {
+          // Try to refresh token and make request again
+          const refreshed = await refreshToken();
 
-      if (!response.ok) {
-        const errorMessage =
-          data.detail || data.message || "Failed to create job";
-        console.error("Server error:", data);
-        throw new Error(errorMessage);
+          if (refreshed) {
+            // Retry with new token from localStorage since refreshToken updates it
+            const data = await makeRequest(
+              localStorage.getItem("token"),
+              formData
+            );
+            setJobs([data, ...jobs]);
+            alert("Job created successfully!");
+            return true;
+          } else {
+            throw new Error("Session expired. Please login again.");
+          }
+        } else {
+          throw error;
+        }
       }
-
-      setJobs([data, ...jobs]);
-      alert("Job created successfully!");
     } catch (err) {
       console.error("Error creating job:", err);
       alert(err.message || "Failed to create job. Please try again.");
+
+      if (err.message.includes("Session expired")) {
+        // Redirect to login if session is expired
+        navigate("/login");
+      }
     }
   };
 
@@ -101,7 +218,7 @@ export default function Jobs() {
       </div>
 
       {/* Job Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {jobs.map((job) => (
           <JobCard key={job.id} job={job} onChat={handleChat} />
         ))}
@@ -111,9 +228,17 @@ export default function Jobs() {
         isOpen={showForm}
         onClose={() => setShowForm(false)}
         onSubmit={async (formData) => {
-          await handleAddJob(formData);
-          setShowForm(false);
+          const success = await handleAddJob(formData);
+          if (success) {
+            setShowForm(false);
+          }
         }}
+      />
+
+      <JobChatPopup
+        isOpen={showChat}
+        onClose={() => setShowChat(false)}
+        job={selectedJob}
       />
     </div>
   );

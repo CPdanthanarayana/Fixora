@@ -1,19 +1,18 @@
 from rest_framework import serializers
-from .models import ChatRoom, Message
+from .models import JobPrivateMessage, IssuePrivateMessage
 
 
-class MessageSerializer(serializers.ModelSerializer):
+class JobPrivateMessageSerializer(serializers.ModelSerializer):
     sender = serializers.StringRelatedField(read_only=True)
 
     class Meta:
-        model = Message
-        fields = ["id", "room", "sender", "content", "timestamp"]
+        model = JobPrivateMessage
+        fields = ["id", "chat", "sender", "text", "created_at"]
 
 
-class ChatRoomSerializer(serializers.ModelSerializer):
-    messages = MessageSerializer(many=True, read_only=True)
+class IssuePrivateMessageSerializer(serializers.ModelSerializer):
+    sender = serializers.StringRelatedField(read_only=True)
 
     class Meta:
-        model = ChatRoom
-        fields = ["id", "issue", "job", "participants", "created_at", "messages"]
-        read_only_fields = ["participants", "created_at", "messages"]
+        model = IssuePrivateMessage
+        fields = ["id", "chat", "sender", "text", "created_at"]

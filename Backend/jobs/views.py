@@ -7,10 +7,33 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework import status
 
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
+
 class JobListCreateView(generics.ListCreateAPIView):
-    queryset = Job.objects.all()
     serializer_class = JobSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """
+        Return all jobs ordered by most recent first
+        """
+        try:
+            return Job.objects.all().order_by('-created_at')
+        except Exception as e:
+            raise ValidationError(detail=str(e))
+
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["status"]                # filter by status

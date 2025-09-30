@@ -16,6 +16,7 @@ class Job(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name="jobs")
+    salary = models.CharField(max_length=100, blank=True, null=True)  
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="jobs")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
