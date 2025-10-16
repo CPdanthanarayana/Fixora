@@ -1,21 +1,19 @@
-@import "@fontsource/inter/index.css"; 
-
 @import "tailwindcss";
 
-@layer base {
-  html {
-    font-family: 'Inter', sans-serif;
-    background-color: theme('colors.gray.50');
-    color: theme('colors.gray.800');
-  }
+/* Custom scrollbar styles for webkit browsers */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
 }
 
-@layer components {
-  .btn-primary {
-    @apply bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition;
-  }
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
 
-  .card {
-    @apply bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition;
-  }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #14b8a6; /* teal-500 */
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: #0f766e; /* teal-600 */
 }

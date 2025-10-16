@@ -3,11 +3,22 @@ import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import NotificationDropdown from "../components/NotificationDropdown";
 import { useNotifications } from "../hooks/useNotifications";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 function Profile() {
   const { user, token, logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showMyServices, setShowMyServices] = useState(false);
+  const [showMyProblems, setShowMyProblems] = useState(false);
+  const [myJobs, setMyJobs] = useState([]);
+  const [myIssues, setMyIssues] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
+  const [issuesLoading, setIssuesLoading] = useState(false);
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead } = useNotifications();
 
@@ -22,6 +33,88 @@ function Profile() {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const fetchMyJobs = async () => {
+    setJobsLoading(true);
+    try {
+      const response = await fetch("http://localhost:8000/api/jobs/my/", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMyJobs(data);
+      } else {
+        // Fallback: filter all jobs by current user
+        const allJobsResponse = await fetch("http://localhost:8000/api/jobs/", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (allJobsResponse.ok) {
+          const allJobs = await allJobsResponse.json();
+          const userJobs = allJobs.filter(job => job.user_id === user.id || job.created_by === user.id);
+          setMyJobs(userJobs);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching my jobs:", err);
+    }
+    setJobsLoading(false);
+  };
+
+  const fetchMyIssues = async () => {
+    setIssuesLoading(true);
+    try {
+      const response = await fetch("http://localhost:8000/api/issues/my/", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMyIssues(data);
+      } else {
+        // Fallback: filter all issues by current user
+        const allIssuesResponse = await fetch("http://localhost:8000/api/issues/", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (allIssuesResponse.ok) {
+          const allIssues = await allIssuesResponse.json();
+          const userIssues = allIssues.filter(issue => issue.user_id === user.id || issue.created_by === user.id);
+          setMyIssues(userIssues);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching my issues:", err);
+    }
+    setIssuesLoading(false);
+  };
+
+  const toggleMyServices = () => {
+    if (!showMyServices && myJobs.length === 0) {
+      fetchMyJobs();
+    }
+    setShowMyServices(!showMyServices);
+    setShowMyProblems(false);
+  };
+
+  const toggleMyProblems = () => {
+    if (!showMyProblems && myIssues.length === 0) {
+      fetchMyIssues();
+    }
+    setShowMyProblems(!showMyProblems);
+    setShowMyServices(false);
   };
 
   if (loading) {
@@ -81,30 +174,118 @@ function Profile() {
 
         <div className="mt-8 border-t pt-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Account Activity
+            My Activity
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-50 p-4 rounded">
-              <h3 className="font-medium text-gray-900">My Jobs</h3>
-              <p className="text-gray-600">View and manage your job listings</p>
-              <button
-                onClick={() => navigate("/jobs")}
-                className="mt-2 text-indigo-600 hover:text-indigo-800"
-              >
-                View Jobs →
-              </button>
+            <div className="bg-gray-50 p-4 rounded hover:bg-gray-100 transition cursor-pointer" onClick={toggleMyServices}>
+              <h3 className="font-medium text-gray-900">My Services ({myJobs.length})</h3>
+              <p className="text-gray-600">View and manage your service listings</p>
+              <span className="mt-2 text-indigo-600 hover:text-indigo-800 text-sm">
+                {showMyServices ? "Hide Services ↑" : "Show My Services ↓"}
+              </span>
             </div>
-            <div className="bg-gray-50 p-4 rounded">
-              <h3 className="font-medium text-gray-900">My Issues</h3>
-              <p className="text-gray-600">Track your reported issues</p>
-              <button
-                onClick={() => navigate("/issues")}
-                className="mt-2 text-indigo-600 hover:text-indigo-800"
-              >
-                View Issues →
-              </button>
+            <div className="bg-gray-50 p-4 rounded hover:bg-gray-100 transition cursor-pointer" onClick={toggleMyProblems}>
+              <h3 className="font-medium text-gray-900">My Problems ({myIssues.length})</h3>
+              <p className="text-gray-600">Track your reported problems</p>
+              <span className="mt-2 text-indigo-600 hover:text-indigo-800 text-sm">
+                {showMyProblems ? "Hide Problems ↑" : "Show My Problems ↓"}
+              </span>
             </div>
           </div>
+
+          {/* My Services Swiper */}
+          {showMyServices && (
+            <div className="mt-6 bg-white p-4 rounded-lg border">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">My Services</h3>
+              {jobsLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : myJobs.length > 0 ? (
+                <Swiper
+                  modules={[Navigation, Pagination]}
+                  spaceBetween={20}
+                  slidesPerView={1}
+                  navigation
+                  pagination={{ clickable: true }}
+                  breakpoints={{
+                    640: { slidesPerView: 2 },
+                    768: { slidesPerView: 3 }
+                  }}
+                >
+                  {myJobs.map((job) => (
+                    <SwiperSlide key={job.id}>
+                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border-l-4 border-indigo-500">
+                        <h4 className="font-semibold text-gray-900">{job.title}</h4>
+                        <p className="text-sm text-gray-600 mt-1">{job.category}</p>
+                        <p className="text-sm text-gray-700 mt-2 line-clamp-2">{job.description}</p>
+                        <div className="mt-3 flex justify-between items-center">
+                          <span className="text-sm font-medium text-indigo-600">
+                            {job.salary ? `Rs. ${job.salary}` : "Negotiable"}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(job.created_at || Date.now()).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              ) : (
+                <p className="text-gray-500 text-center py-8">No services posted yet</p>
+              )}
+            </div>
+          )}
+
+          {/* My Problems Swiper */}
+          {showMyProblems && (
+            <div className="mt-6 bg-white p-4 rounded-lg border">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">My Problems</h3>
+              {issuesLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : myIssues.length > 0 ? (
+                <Swiper
+                  modules={[Navigation, Pagination]}
+                  spaceBetween={20}
+                  slidesPerView={1}
+                  navigation
+                  pagination={{ clickable: true }}
+                  breakpoints={{
+                    640: { slidesPerView: 2 },
+                    768: { slidesPerView: 3 }
+                  }}
+                >
+                  {myIssues.map((issue) => (
+                    <SwiperSlide key={issue.id}>
+                      <div className="bg-gradient-to-br from-red-50 to-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                        <h4 className="font-semibold text-gray-900">{issue.title}</h4>
+                        <p className="text-sm text-gray-600 mt-1">{issue.category_name}</p>
+                        <p className="text-sm text-gray-700 mt-2 line-clamp-2">{issue.description}</p>
+                        <div className="mt-3 flex justify-between items-center">
+                          <span className="text-xs text-gray-500">
+                            {new Date(issue.created_at || Date.now()).toLocaleDateString()}
+                          </span>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate("/issues");
+                            }}
+                            className="text-xs text-orange-600 hover:text-orange-800"
+                          >
+                            View →
+                          </button>
+                        </div>
+                      </div>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              ) : (
+                <p className="text-gray-500 text-center py-8">No problems reported yet</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Notifications Section */}

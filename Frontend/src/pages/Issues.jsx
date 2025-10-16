@@ -4,15 +4,17 @@ import { useNavigate } from "react-router-dom";
 import IssueCard from "../components/IssueCard";
 import IssueForm from "../components/IssueForm";
 import IssueChatPopup from "../components/IssueChatPopup";
+import { Search, Filter } from "lucide-react";
 
 export default function Issues() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [showChat, setShowChat] = useState(false);
-  const { token, refreshToken } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchFilter, setSearchFilter] = useState("all");
+  const { token, refreshToken, user } = useAuth();
   const navigate = useNavigate();
 
   // Check for auto-open chat from notifications
@@ -27,7 +29,7 @@ export default function Issues() {
     }
   }, [issues]);
 
-  // Fetch issues from backend
+  // Fetch issues(problems) from backend
   useEffect(() => {
     if (!token) {
       navigate("/login");
@@ -93,12 +95,10 @@ export default function Issues() {
           throw new Error(data.detail || "Failed to fetch issues");
         }
 
-        console.log("Received issues:", data);
         setIssues(data);
         setLoading(false);
       } catch (err) {
         console.error("Fetch error:", err);
-        setError(err.message);
         setLoading(false);
       }
     };
@@ -109,6 +109,80 @@ export default function Issues() {
   const handleChat = (issue) => {
     setSelectedIssue(issue);
     setShowChat(true);
+  };
+
+  // Filter issues based on search term and selected filter
+  const filteredIssues = issues.filter((issue) => {
+    if (!searchTerm) return true;
+
+    const searchLower = searchTerm.toLowerCase();
+
+    switch (searchFilter) {
+      case "title":
+        return issue.title?.toLowerCase().includes(searchLower);
+      case "category":
+        return issue.category_name?.toLowerCase().includes(searchLower);
+      case "description":
+        return issue.description?.toLowerCase().includes(searchLower);
+      case "all":
+      default:
+        return (
+          issue.title?.toLowerCase().includes(searchLower) ||
+          issue.category_name?.toLowerCase().includes(searchLower) ||
+          issue.description?.toLowerCase().includes(searchLower)
+        );
+    }
+  });
+
+  const handleDeleteIssue = async (issue) => {
+    if (!confirm(`Are you sure you want to delete "${issue.title}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/issues/${issue.id}/`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          const newResponse = await fetch(
+            `http://localhost:8000/api/issues/${issue.id}/`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          if (newResponse.ok) {
+            setIssues(issues.filter((i) => i.id !== issue.id));
+            alert("Problem deleted successfully!");
+          } else {
+            throw new Error("Failed to delete problem");
+          }
+        } else {
+          navigate("/login");
+        }
+      } else if (response.ok) {
+        setIssues(issues.filter((i) => i.id !== issue.id));
+        alert("Problem deleted successfully!");
+      } else {
+        throw new Error("Failed to delete problem");
+      }
+    } catch (err) {
+      console.error("Error deleting issue:", err);
+      alert(err.message || "Failed to delete problem. Please try again.");
+    }
   };
 
   const handleAddIssue = async (formData) => {
@@ -188,24 +262,103 @@ export default function Issues() {
 
   return (
     <div className="p-6">
-      {/* Add Issue Button */}
-      <div className="flex justify-end mb-6">
+      {/* Header: Available Problems + Post New Problem button */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-extrabold text-gray-900">
+          Available Problems
+        </h1>
+
         <button
           onClick={() => setShowForm(true)}
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow hover:opacity-90 transition"
+          className="bg-orange-500 text-white px-4 py-2 rounded-md shadow hover:opacity-95 transition text-sm font-medium"
+          aria-label="Post New Problem"
         >
-          + Add Issue
+          Post New Problem
         </button>
+      </div>
+
+      {/* Search Bar with Filter */}
+      <div className="mb-6">
+        <div className="flex gap-3 max-w-2xl">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder={`Search problems by ${
+                searchFilter === "all"
+                  ? "title, category, or description"
+                  : searchFilter
+              }...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full h-10 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-orange-500 focus:border-orange-500 text-sm"
+            />
+          </div>
+
+          {/* Filter Dropdown */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Filter className="h-4 w-4 text-white" />
+            </div>
+            <select
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className="block w-full h-10 pl-10 pr-8 py-2 border border-gray-300 rounded-md bg-orange-500 text-white focus:outline-none focus:ring-1 focus:ring-orange-600 focus:border-orange-600 text-sm appearance-none"
+            >
+              <option value="all" className="bg-white text-gray-700">
+                All Fields
+              </option>
+              <option value="title" className="bg-white text-gray-700">
+                Title
+              </option>
+              <option value="category" className="bg-white text-gray-700">
+                Category
+              </option>
+              <option value="description" className="bg-white text-gray-700">
+                Description
+              </option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <svg
+                className="w-4 h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Issues Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {issues.map((issue) => (
-          <IssueCard key={issue.id} issue={issue} onChat={handleChat} />
+        {filteredIssues.map((issue) => (
+          <IssueCard
+            key={issue.id}
+            issue={issue}
+            onChat={handleChat}
+            onDelete={handleDeleteIssue}
+            currentUserId={user?.id}
+          />
         ))}
-        {issues.length === 0 && (
+        {filteredIssues.length === 0 && issues.length > 0 && (
           <p className="text-gray-500 col-span-full text-center py-8">
-            No issues found. Click "Add Issue" to create one.
+            No problems found matching "{searchTerm}". Try different keywords.
+          </p>
+        )}
+        {issues.length === 0 && !loading && (
+          <p className="text-gray-500 col-span-full text-center py-8">
+            No problems found. Click "Post New Problem" to create one.
           </p>
         )}
       </div>
