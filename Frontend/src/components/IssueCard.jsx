@@ -29,7 +29,7 @@ function IssueCard({ issue, onChat, onDelete, currentUserId }) {
     <div className="rounded-2xl shadow-md p-5 hover:shadow-lg transition h-full flex flex-col relative">
       {/* Category Icon - Top Right */}
       <div className="absolute top-4 right-4">
-        {getCategoryIcon(issue.category_name)}
+        {getCategoryIcon(issue.category)}
       </div>
 
       {/* Content Area */}
@@ -38,7 +38,7 @@ function IssueCard({ issue, onChat, onDelete, currentUserId }) {
         <h3 className="text-lg font-semibold text-black">{issue.title}</h3>
 
         {/* Company / Category */}
-        <p className="text-sm text-black/80">{issue.category_name}</p>
+        <p className="text-sm text-black/80">{issue.category}</p>
 
         {/* Description */}
         <div className="mt-2">
@@ -74,9 +74,16 @@ function IssueCard({ issue, onChat, onDelete, currentUserId }) {
 
       {/* Bottom row - Always at bottom */}
       <div className="flex items-center justify-between mt-4 pt-2 border-t border-gray-100">
-        {/* Left side - Delete Button (only for user's own issues) */}
-        <div className="flex items-center">
-          {(issue.user_id === currentUserId ||
+        {/* Left side - Price and Delete Button */}
+        <div className="flex items-center gap-2">
+          <div className="bg-teal-500 rounded-lg px-3 py-1 inline-block">
+            <span className="text-sm font-medium text-white/90">
+              {issue.salary ? `Rs. ${issue.salary}` : "Negotiable"}
+            </span>
+          </div>
+          {/* Delete Button (only for user's own issues) */}
+          {(issue.user === currentUserId ||
+            issue.user_id === currentUserId ||
             issue.created_by === currentUserId) &&
             onDelete && (
               <button

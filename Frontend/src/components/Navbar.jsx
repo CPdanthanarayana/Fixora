@@ -13,7 +13,7 @@ function Navbar() {
         </Link>
 
         {/* Links */}
-        <ul className="flex space-x-2 sm:space-x-3 md:space-x-4 lg:space-x-5 font-semibold items-center font-body">
+        <ul className="flex space-x-1 sm:space-x-2 md:space-x-3 lg:space-x-4 font-semibold items-center font-body">
           <li>
             <Link
               to="/jobs"
@@ -45,7 +45,7 @@ function Navbar() {
             <li>
               <Link
                 to="/login"
-                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 sm:px-6 py-2 sm:py-3 text-base sm:text-lg md:text-xl rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 font-heading"
+                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 font-heading"
               >
                 Login
               </Link>

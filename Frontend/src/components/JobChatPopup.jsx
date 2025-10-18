@@ -225,7 +225,7 @@ function JobChatPopup({ isOpen, onClose, job }) {
                 <div
                   className={`max-w-xs px-3 py-2 rounded-lg ${
                     message.is_sender
-                      ? "bg-indigo-600 text-white"
+                      ? "bg-teal-500 text-white"
                       : "bg-gray-200 text-gray-900"
                   }`}
                 >
@@ -253,13 +253,13 @@ function JobChatPopup({ isOpen, onClose, job }) {
                   ? "Select a user first..."
                   : "Type your message..."
               }
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500"
               disabled={loading || showUserSelection}
             />
             <button
               onClick={sendMessage}
               disabled={loading || !newMessage.trim() || showUserSelection}
-              className="px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-5 h-5" />
             </button>

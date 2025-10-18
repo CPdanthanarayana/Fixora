@@ -28,10 +28,10 @@ function Login() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
   return (
-    <div className="w-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 px-4 py-8 relative">
+    <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-teal-50 to-orange-50 px-4 py-8 relative">
       {/* Optional decorative background shapes */}
-      <div className="absolute top-0 left-0 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-      <div className="absolute bottom-0 right-0 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+      <div className="absolute top-0 left-0 w-72 h-72 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+      <div className="absolute bottom-0 right-0 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
 
       {/* Login Card */}
       <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 sm:p-10 flex flex-col justify-center">
@@ -68,7 +68,7 @@ function Login() {
               placeholder="Enter your username"
               value={formData.username}
               onChange={handleChange}
-              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition sm:text-sm"
+              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition sm:text-sm"
             />
           </div>
 
@@ -88,7 +88,7 @@ function Login() {
               placeholder="Enter your password"
               value={formData.password}
               onChange={handleChange}
-              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition sm:text-sm"
+              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition sm:text-sm"
             />
           </div>
 
@@ -96,7 +96,7 @@ function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition text-lg"
+            className="w-full py-3 px-4 rounded-xl font-semibold text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition text-lg"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
@@ -105,7 +105,7 @@ function Login() {
         {/* Extra Links */}
         <div className="mt-6 text-center text-sm text-gray-500">
           Don't have an account?{" "}
-          <a href="/register" className="text-indigo-600 hover:underline">
+          <a href="/register" className="text-orange-500 hover:underline">
             Sign up
           </a>
         </div>

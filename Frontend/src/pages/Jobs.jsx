@@ -14,7 +14,7 @@ export default function Jobs() {
   const [showChat, setShowChat] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
-  const { token, refreshToken } = useAuth();
+  const { token, refreshToken, user } = useAuth();
   const navigate = useNavigate();
 
   // Check for auto-open chat from notifications
@@ -209,6 +209,57 @@ export default function Jobs() {
     }
   };
 
+  const handleDeleteJob = async (job) => {
+    if (!confirm(`Are you sure you want to delete "${job.title}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/jobs/${job.id}/`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          const newResponse = await fetch(
+            `http://localhost:8000/api/jobs/${job.id}/`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          if (newResponse.ok) {
+            setJobs(jobs.filter((j) => j.id !== job.id));
+            alert("Service deleted successfully!");
+          } else {
+            throw new Error("Failed to delete service");
+          }
+        } else {
+          navigate("/login");
+        }
+      } else if (response.ok) {
+        setJobs(jobs.filter((j) => j.id !== job.id));
+        alert("Service deleted successfully!");
+      } else {
+        throw new Error("Failed to delete service");
+      }
+    } catch (err) {
+      console.error("Error deleting job:", err);
+      alert(err.message || "Failed to delete service. Please try again.");
+    }
+  };
+
   return (
     <div className="p-6">
       {/* Header: Available Jobs + Post New Problem button */}
@@ -291,7 +342,13 @@ export default function Jobs() {
       {/* Job Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {filteredJobs.map((job) => (
-          <JobCard key={job.id} job={job} onChat={handleChat} />
+          <JobCard
+            key={job.id}
+            job={job}
+            onChat={handleChat}
+            onDelete={handleDeleteJob}
+            currentUserId={user?.id}
+          />
         ))}
         {filteredJobs.length === 0 && jobs.length > 0 && (
           <p className="text-gray-500 col-span-full text-center py-8">

@@ -1,4 +1,4 @@
-import { MessageCircle, Wrench, Cog, Hammer } from "lucide-react";
+import { MessageCircle, Wrench, Cog, Hammer, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { FaBroom, FaHardHat } from "react-icons/fa";
 
@@ -21,7 +21,7 @@ const getCategoryIcon = (categoryName) => {
   }
 };
 
-function JobCard({ job, onChat }) {
+function JobCard({ job, onChat, onDelete, currentUserId }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isLongDescription = job.description && job.description.length > 150;
 
@@ -74,18 +74,37 @@ function JobCard({ job, onChat }) {
 
       {/* Bottom row - Always at bottom */}
       <div className="flex items-center justify-between mt-4 pt-2 border-t border-gray-100">
-        <div className="bg-teal-500 rounded-lg px-3 py-1 inline-block">
-          <span className="text-sm font-medium text-white/90">
-            {job.salary ? `Rs. ${job.salary}` : "Negotiable"}
-          </span>
+        {/* Left side - Price and Delete Button */}
+        <div className="flex items-center gap-2">
+          <div className="bg-teal-500 rounded-lg px-3 py-1 inline-block">
+            <span className="text-sm font-medium text-white/90">
+              {job.salary ? `Rs. ${job.salary}` : "Negotiable"}
+            </span>
+          </div>
+          {/* Delete Button (only for user's own jobs) */}
+          {(job.user_id === currentUserId ||
+            job.created_by === currentUserId) &&
+            onDelete && (
+              <button
+                onClick={() => onDelete(job)}
+                className="p-2 rounded-full bg-red-100 text-red-500 hover:bg-red-200 transition"
+                title="Delete this service"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
         </div>
-        {/* Chat Icon */}
-        <button
-          onClick={() => onChat(job)}
-          className=" p-2 rounded-full bg-black/10 text-black/50 hover:bg-black/30 transition"
-        >
-          <MessageCircle className="w-5 h-5" />
-        </button>
+
+        {/* Right side - Chat Icon */}
+        <div className="flex items-center">
+          <button
+            onClick={() => onChat(job)}
+            className="p-2 rounded-full bg-black/10 text-black/50 hover:bg-black/30 transition"
+            title="Chat about this service"
+          >
+            <MessageCircle className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );

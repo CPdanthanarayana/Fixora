@@ -37,7 +37,7 @@ function IssueForm({ isOpen, onSubmit, onClose }) {
         </button>
 
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Create an Issue
+          Post a Problem
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -51,7 +51,7 @@ function IssueForm({ isOpen, onSubmit, onClose }) {
               value={formData.title}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500"
               placeholder="e.g., Electrician needed"
             />
           </div>
@@ -66,8 +66,8 @@ function IssueForm({ isOpen, onSubmit, onClose }) {
               onChange={handleChange}
               required
               rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              placeholder="Describe the job requirements..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500"
+              placeholder="Describe the Problem..."
             />
           </div>
 
@@ -80,7 +80,7 @@ function IssueForm({ isOpen, onSubmit, onClose }) {
               value={formData.category}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
             >
               <option value="">Select a category</option>
               <option value="Repair">Repair</option>
@@ -99,7 +99,7 @@ function IssueForm({ isOpen, onSubmit, onClose }) {
               name="salary"
               value={formData.salary}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500"
               placeholder="Enter amount (optional)"
             />
           </div>
@@ -114,9 +114,9 @@ function IssueForm({ isOpen, onSubmit, onClose }) {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-md hover:opacity-90 transition"
+              className="bg-orange-500 px-4 py-2 text-sm font-medium text-white rounded-md hover:opacity-90 transition"
             >
-              Create Job
+              Post
             </button>
           </div>
         </form>
