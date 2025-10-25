@@ -6,6 +6,9 @@ import { useNotifications } from "../hooks/useNotifications";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import { FaUserTie, FaUserNurse, FaUser } from "react-icons/fa";
+import { MessageCircle } from "lucide-react";
+import JobChatPopup from "../components/JobChatPopup";
+import IssueChatPopup from "../components/IssueChatPopup";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -20,6 +23,10 @@ function Profile() {
   const [myIssues, setMyIssues] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(false);
   const [issuesLoading, setIssuesLoading] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [selectedIssue, setSelectedIssue] = useState(null);
+  const [showJobChat, setShowJobChat] = useState(false);
+  const [showIssueChat, setShowIssueChat] = useState(false);
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead } = useNotifications();
 
@@ -123,6 +130,16 @@ function Profile() {
     }
     setShowMyProblems(!showMyProblems);
     setShowMyServices(false);
+  };
+
+  const handleJobChat = (job) => {
+    setSelectedJob(job);
+    setShowJobChat(true);
+  };
+
+  const handleIssueChat = (issue) => {
+    setSelectedIssue(issue);
+    setShowIssueChat(true);
   };
 
   if (loading) {
@@ -632,51 +649,65 @@ function Profile() {
                       {myJobs.map((job) => (
                         <div
                           key={job.id}
-                          className="bg-gray-50 rounded-lg p-4 border border-gray-200 relative"
+                          className="bg-gray-50 rounded-lg p-4 border border-gray-200 relative cursor-pointer hover:shadow-md transition min-h-[200px] flex flex-col"
+                          onClick={() => {
+                            sessionStorage.setItem("highlightJobId", job.id);
+                            navigate("/jobs");
+                          }}
                         >
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              console.log("Delete job:", job.id);
-                            }}
-                            className="absolute top-3 right-3 w-8 h-8 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center text-red-600 transition"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                          <div className="absolute top-3 right-3 flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleJobChat(job);
+                              }}
+                              className="w-8 h-8 bg-teal-100 hover:bg-teal-200 rounded-full flex items-center justify-center text-teal-600 transition"
+                              title="Chat about this service"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                          <div className="pr-10">
-                            <h4 className="font-semibold text-gray-900 text-lg mb-1">
+                              <MessageCircle className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log("Delete job:", job.id);
+                              }}
+                              className="w-8 h-8 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center text-red-600 transition"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                          <div className="pr-20 flex-1">
+                            <h4 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-2">
                               {job.title}
                             </h4>
                             <p className="text-sm text-teal-600 font-medium mb-2">
                               {job.category}
                             </p>
-                            <p className="text-sm text-gray-700 mb-3 line-clamp-2">
+                            <p className="text-sm text-gray-700 mb-3 line-clamp-3 md:line-clamp-4 lg:line-clamp-5">
                               {job.description}
                             </p>
-                            <div className="flex justify-between items-center">
-                              <span className="text-lg font-bold text-gray-900">
-                                {job.salary
-                                  ? `Rs. ${job.salary}`
-                                  : "Negotiable"}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {new Date(
-                                  job.created_at || Date.now()
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
+                          </div>
+                          <div className="flex justify-between items-center pr-20 mt-auto">
+                            <span className="text-lg font-bold text-gray-900">
+                              {job.salary ? `Rs. ${job.salary}` : "Negotiable"}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(
+                                job.created_at || Date.now()
+                              ).toLocaleDateString()}
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -697,38 +728,61 @@ function Profile() {
                       >
                         {myJobs.map((job) => (
                           <SwiperSlide key={job.id}>
-                            <div className="bg-teal-50 p-4 rounded-lg border-l-4 border-teal-400 relative">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  console.log("Delete job:", job.id);
-                                }}
-                                className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+                            <div
+                              className="bg-teal-50 p-4 rounded-lg border-l-4 border-teal-400 relative cursor-pointer hover:shadow-md transition min-h-[200px] flex flex-col"
+                              onClick={() => {
+                                sessionStorage.setItem(
+                                  "highlightJobId",
+                                  job.id
+                                );
+                                navigate("/jobs");
+                              }}
+                            >
+                              <div className="absolute top-2 right-2 flex gap-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleJobChat(job);
+                                  }}
+                                  className="p-1.5 bg-teal-100 hover:bg-teal-200 rounded-full text-teal-600 transition"
+                                  title="Chat about this service"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                  />
-                                </svg>
-                              </button>
-                              <h4 className="font-semibold text-gray-900">
-                                {job.title}
-                              </h4>
-                              <p className="text-sm text-gray-600 mt-1">
-                                {job.category}
-                              </p>
-                              <p className="text-sm text-gray-700 mt-2 line-clamp-2">
-                                {job.description}
-                              </p>
-                              <div className="mt-3 flex justify-between items-center">
+                                  <MessageCircle className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    console.log("Delete job:", job.id);
+                                  }}
+                                  className="p-1 text-red-500 hover:text-red-700"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                              <div className="pr-16 flex-1">
+                                <h4 className="font-semibold text-gray-900 line-clamp-2">
+                                  {job.title}
+                                </h4>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {job.category}
+                                </p>
+                                <p className="text-sm text-gray-700 mt-2 line-clamp-4 lg:line-clamp-5">
+                                  {job.description}
+                                </p>
+                              </div>
+                              <div className="mt-3 flex justify-between items-center pr-16">
                                 <span className="text-sm font-medium text-gray-600">
                                   {job.salary
                                     ? `Rs. ${job.salary}`
@@ -790,55 +844,70 @@ function Profile() {
                       {myIssues.map((issue) => (
                         <div
                           key={issue.id}
-                          className="bg-gray-50 rounded-lg p-4 border border-gray-200 relative"
+                          className="bg-gray-50 rounded-lg p-4 border border-gray-200 relative cursor-pointer hover:shadow-md transition min-h-[200px] flex flex-col"
+                          onClick={() => {
+                            sessionStorage.setItem(
+                              "highlightIssueId",
+                              issue.id
+                            );
+                            navigate("/issues");
+                          }}
                         >
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              console.log("Delete issue:", issue.id);
-                            }}
-                            className="absolute top-3 right-3 w-8 h-8 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center text-red-600 transition"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                          <div className="absolute top-3 right-3 flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleIssueChat(issue);
+                              }}
+                              className="w-8 h-8 bg-orange-100 hover:bg-orange-200 rounded-full flex items-center justify-center text-orange-600 transition"
+                              title="Chat about this problem"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                          <div className="pr-10">
-                            <h4 className="font-semibold text-gray-900 text-lg mb-1">
+                              <MessageCircle className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log("Delete issue:", issue.id);
+                              }}
+                              className="w-8 h-8 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center text-red-600 transition"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                          <div className="pr-20 flex-1">
+                            <h4 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-2">
                               {issue.title}
                             </h4>
                             <p className="text-sm text-orange-600 font-medium mb-2">
                               {issue.category_name}
                             </p>
-                            <p className="text-sm text-gray-700 mb-3 line-clamp-2">
+                            <p className="text-sm text-gray-700 mb-3 line-clamp-3 md:line-clamp-4 lg:line-clamp-5">
                               {issue.description}
                             </p>
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-gray-500">
-                                {new Date(
-                                  issue.created_at || Date.now()
-                                ).toLocaleDateString()}
-                              </span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate("/issues");
-                                }}
-                                className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium hover:bg-orange-200 transition"
-                              >
-                                View Details
-                              </button>
-                            </div>
+                          </div>
+                          <div className="flex justify-between items-center pr-20 mt-auto">
+                            <span className="text-lg font-bold text-gray-900">
+                              {issue.salary
+                                ? `Rs. ${issue.salary}`
+                                : "Negotiable"}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(
+                                issue.created_at || Date.now()
+                              ).toLocaleDateString()}
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -859,52 +928,71 @@ function Profile() {
                       >
                         {myIssues.map((issue) => (
                           <SwiperSlide key={issue.id}>
-                            <div className="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-400 relative">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  console.log("Delete issue:", issue.id);
-                                }}
-                                className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+                            <div
+                              className="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-400 relative cursor-pointer hover:shadow-md transition min-h-[200px] flex flex-col"
+                              onClick={() => {
+                                sessionStorage.setItem(
+                                  "highlightIssueId",
+                                  issue.id
+                                );
+                                navigate("/issues");
+                              }}
+                            >
+                              <div className="absolute top-2 right-2 flex gap-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleIssueChat(issue);
+                                  }}
+                                  className="w-7 h-7 bg-orange-100 hover:bg-orange-200 rounded-full flex items-center justify-center text-orange-600 transition"
+                                  title="Chat about this problem"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                  />
-                                </svg>
-                              </button>
-                              <h4 className="font-semibold text-gray-900">
-                                {issue.title}
-                              </h4>
-                              <p className="text-sm text-gray-600 mt-1">
-                                {issue.category_name}
-                              </p>
-                              <p className="text-sm text-gray-700 mt-2 line-clamp-2">
-                                {issue.description}
-                              </p>
-                              <div className="mt-3 flex justify-between items-center">
+                                  <MessageCircle className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    console.log("Delete issue:", issue.id);
+                                  }}
+                                  className="text-red-500 hover:text-red-700 p-1"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                              <div className="pr-16 flex-1">
+                                <h4 className="font-semibold text-gray-900 line-clamp-2">
+                                  {issue.title}
+                                </h4>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {issue.category_name}
+                                </p>
+                                <p className="text-sm text-gray-700 mt-2 line-clamp-4 lg:line-clamp-5">
+                                  {issue.description}
+                                </p>
+                              </div>
+                              <div className="mt-3 flex justify-between items-center pr-16">
+                                <span className="text-sm font-medium text-gray-600">
+                                  {issue.salary
+                                    ? `Rs. ${issue.salary}`
+                                    : "Negotiable"}
+                                </span>
                                 <span className="text-xs text-gray-500">
                                   {new Date(
                                     issue.created_at || Date.now()
                                   ).toLocaleDateString()}
                                 </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate("/issues");
-                                  }}
-                                  className="text-xs text-gray-600 hover:text-gray-800"
-                                >
-                                  View →
-                                </button>
                               </div>
                             </div>
                           </SwiperSlide>
@@ -1071,6 +1159,29 @@ function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Chat Popups */}
+      {showJobChat && selectedJob && (
+        <JobChatPopup
+          isOpen={showJobChat}
+          onClose={() => {
+            setShowJobChat(false);
+            setSelectedJob(null);
+          }}
+          job={selectedJob}
+        />
+      )}
+
+      {showIssueChat && selectedIssue && (
+        <IssueChatPopup
+          isOpen={showIssueChat}
+          onClose={() => {
+            setShowIssueChat(false);
+            setSelectedIssue(null);
+          }}
+          issue={selectedIssue}
+        />
+      )}
     </div>
   );
 }

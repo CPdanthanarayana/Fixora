@@ -14,8 +14,31 @@ export default function Jobs() {
   const [showChat, setShowChat] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
+  const [highlightedJobId, setHighlightedJobId] = useState(null);
   const { token, refreshToken, user } = useAuth();
   const navigate = useNavigate();
+
+  // Check for highlighted job from profile
+  useEffect(() => {
+    const jobIdToHighlight = sessionStorage.getItem("highlightJobId");
+    if (jobIdToHighlight) {
+      setHighlightedJobId(parseInt(jobIdToHighlight));
+      sessionStorage.removeItem("highlightJobId");
+
+      // Scroll to the highlighted job after a short delay
+      setTimeout(() => {
+        const element = document.getElementById(`job-${jobIdToHighlight}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 500);
+
+      // Remove highlight after 2 seconds (zoom animation completes, shadow stays)
+      setTimeout(() => {
+        setHighlightedJobId(null);
+      }, 4000);
+    }
+  }, [jobs]);
 
   // Check for auto-open chat from notifications
   useEffect(() => {
@@ -342,13 +365,28 @@ export default function Jobs() {
       {/* Job Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {filteredJobs.map((job) => (
-          <JobCard
+          <div
             key={job.id}
-            job={job}
-            onChat={handleChat}
-            onDelete={handleDeleteJob}
-            currentUserId={user?.id}
-          />
+            id={`job-${job.id}`}
+            className={`rounded-2xl transform-gpu transition-all duration-700 ${
+              highlightedJobId === job.id
+                ? "shadow-[0_0_30px_rgba(20,184,166,0.6)]"
+                : ""
+            }`}
+            style={{
+              animation:
+                highlightedJobId === job.id
+                  ? "zoomInOut 1s ease-in-out"
+                  : "none",
+            }}
+          >
+            <JobCard
+              job={job}
+              onChat={handleChat}
+              onDelete={handleDeleteJob}
+              currentUserId={user?.id}
+            />
+          </div>
         ))}
         {filteredJobs.length === 0 && jobs.length > 0 && (
           <p className="text-gray-500 col-span-full text-center py-8">
@@ -361,6 +399,20 @@ export default function Jobs() {
           </p>
         )}
       </div>
+
+      <style>{`
+        @keyframes zoomInOut {
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.08);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+      `}</style>
 
       <JobForm
         isOpen={showForm}

@@ -72,18 +72,46 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (token) {
-      fetch("http://localhost:8000/api/users/profile/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => setUser(data))
-        .catch(() => {
-          refreshToken();
+    const loadProfile = async () => {
+      if (!token) return;
+
+      try {
+        const res = await fetch("http://localhost:8000/api/users/profile/", {
+          headers: { Authorization: `Bearer ${token}` },
         });
-    }
+
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+          return;
+        }
+
+        // If unauthorized, try to refresh the token and retry once
+        if (res.status === 401 || res.status === 403) {
+          const refreshed = await refreshToken();
+          if (refreshed) {
+            const newToken = localStorage.getItem("token");
+            const res2 = await fetch(
+              "http://localhost:8000/api/users/profile/",
+              {
+                headers: { Authorization: `Bearer ${newToken}` },
+              }
+            );
+            if (res2.ok) {
+              const data2 = await res2.json();
+              setUser(data2);
+              return;
+            }
+          }
+          // Refresh failed or second call failed, log out
+          logout();
+        }
+      } catch (e) {
+        console.error("Profile load error:", e);
+      }
+    };
+
+    loadProfile();
   }, [token]);
 
   return (

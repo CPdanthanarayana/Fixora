@@ -4,7 +4,7 @@ from .models import Issue
 class IssueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Issue
-        fields = ['id', 'user', 'title', 'description', 'category', 'status', 'created_at', 'updated_at']
+        fields = ['id', 'user', 'title', 'description', 'category', 'salary', 'status', 'created_at', 'updated_at']
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
 
     def create(self, validated_data):

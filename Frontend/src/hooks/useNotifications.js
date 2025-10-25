@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "./useAuth";
 
 export const useNotifications = () => {
-  const { token } = useAuth();
+  const { token, refreshToken } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,21 @@ export const useNotifications = () => {
       if (response.ok) {
         const data = await response.json();
         setNotifications(data);
+      } else if (response.status === 401 || response.status === 403) {
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          const newToken = localStorage.getItem("token");
+          const retry = await fetch(
+            "http://localhost:8000/api/notifications/",
+            {
+              headers: { Authorization: `Bearer ${newToken}` },
+            }
+          );
+          if (retry.ok) {
+            const data = await retry.json();
+            setNotifications(data);
+          }
+        }
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -44,6 +59,21 @@ export const useNotifications = () => {
       if (response.ok) {
         const data = await response.json();
         setUnreadCount(data.count);
+      } else if (response.status === 401 || response.status === 403) {
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          const newToken = localStorage.getItem("token");
+          const retry = await fetch(
+            "http://localhost:8000/api/notifications/unread-count/",
+            {
+              headers: { Authorization: `Bearer ${newToken}` },
+            }
+          );
+          if (retry.ok) {
+            const data = await retry.json();
+            setUnreadCount(data.count);
+          }
+        }
       }
     } catch (error) {
       console.error("Error fetching unread count:", error);

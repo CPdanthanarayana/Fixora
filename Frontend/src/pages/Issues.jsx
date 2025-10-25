@@ -14,8 +14,31 @@ export default function Issues() {
   const [showChat, setShowChat] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
+  const [highlightedIssueId, setHighlightedIssueId] = useState(null);
   const { token, refreshToken, user } = useAuth();
   const navigate = useNavigate();
+
+  // Check for highlighted issue from profile
+  useEffect(() => {
+    const issueIdToHighlight = sessionStorage.getItem("highlightIssueId");
+    if (issueIdToHighlight) {
+      setHighlightedIssueId(parseInt(issueIdToHighlight));
+      sessionStorage.removeItem("highlightIssueId");
+
+      // Scroll to the highlighted issue after a short delay
+      setTimeout(() => {
+        const element = document.getElementById(`issue-${issueIdToHighlight}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 500);
+
+      // Remove highlight after 2 seconds (zoom animation completes, shadow stays)
+      setTimeout(() => {
+        setHighlightedIssueId(null);
+      }, 4000);
+    }
+  }, [issues]);
 
   // Check for auto-open chat from notifications
   useEffect(() => {
@@ -121,14 +144,14 @@ export default function Issues() {
       case "title":
         return issue.title?.toLowerCase().includes(searchLower);
       case "category":
-        return issue.category_name?.toLowerCase().includes(searchLower);
+        return issue.category?.toLowerCase().includes(searchLower);
       case "description":
         return issue.description?.toLowerCase().includes(searchLower);
       case "all":
       default:
         return (
           issue.title?.toLowerCase().includes(searchLower) ||
-          issue.category_name?.toLowerCase().includes(searchLower) ||
+          issue.category?.toLowerCase().includes(searchLower) ||
           issue.description?.toLowerCase().includes(searchLower)
         );
     }
@@ -188,16 +211,24 @@ export default function Issues() {
   const handleAddIssue = async (formData) => {
     try {
       const makeRequest = async (currentToken) => {
+        // Prepare the data, converting salary to number or null
+        const issueData = {
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          salary: formData.salary ? parseFloat(formData.salary) : null,
+          status: "open",
+        };
+
+        console.log("Sending issue data:", issueData);
+
         const response = await fetch("http://localhost:8000/api/issues/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${currentToken}`,
           },
-          body: JSON.stringify({
-            ...formData,
-            status: "open",
-          }),
+          body: JSON.stringify(issueData),
         });
 
         const data = await response.json();
@@ -343,13 +374,28 @@ export default function Issues() {
       {/* Issues Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {filteredIssues.map((issue) => (
-          <IssueCard
+          <div
             key={issue.id}
-            issue={issue}
-            onChat={handleChat}
-            onDelete={handleDeleteIssue}
-            currentUserId={user?.id}
-          />
+            id={`issue-${issue.id}`}
+            className={`rounded-2xl transform-gpu transition-all duration-700 ${
+              highlightedIssueId === issue.id
+                ? "shadow-[0_0_30px_rgba(249,115,22,0.6)]"
+                : ""
+            }`}
+            style={{
+              animation:
+                highlightedIssueId === issue.id
+                  ? "zoomInOut 1s ease-in-out"
+                  : "none",
+            }}
+          >
+            <IssueCard
+              issue={issue}
+              onChat={handleChat}
+              onDelete={handleDeleteIssue}
+              currentUserId={user?.id}
+            />
+          </div>
         ))}
         {filteredIssues.length === 0 && issues.length > 0 && (
           <p className="text-gray-500 col-span-full text-center py-8">
@@ -362,6 +408,20 @@ export default function Issues() {
           </p>
         )}
       </div>
+
+      <style>{`
+        @keyframes zoomInOut {
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.08);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+      `}</style>
 
       <IssueForm
         isOpen={showForm}

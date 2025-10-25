@@ -21,7 +21,15 @@ function IssueForm({ isOpen, onSubmit, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Form data being submitted:", formData);
     await onSubmit(formData);
+    // Reset form after successful submission
+    setFormData({
+      title: "",
+      description: "",
+      category: "",
+      salary: "",
+    });
     onClose();
   };
 
