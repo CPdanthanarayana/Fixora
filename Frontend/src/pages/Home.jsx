@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Rocket } from "lucide-react";
+import LandingImage from "../assets/LandingImage.png";
 
 function Home() {
   return (
@@ -12,42 +13,100 @@ function Home() {
       </div>
 
       {/* Main Container */}
-      <div className="relative z-10 flex-1 flex flex-col justify-center max-w-7xl mx-auto px-4 sm:px-6 md:pl-4 md:pr-8">
+      <div className="relative z-10 flex-1 flex flex-col justify-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16">
         {/* Hero Section */}
-        <main className="grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-8 min-h-[60vh] md:h-[60vh]">
+        <main className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 md:gap-12 w-full">
           {/* Left Side - Content */}
-          <div className="flex flex-col items-start text-left px-2 md:px-0 md:-ml-8">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
+          <div className="flex flex-col items-start text-left space-y-6 md:space-y-8 max-w-xl">
+            <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
               Your Repairs,
               <br />
               Simplified
             </h1>
-            <p className="text-gray-500 text-base sm:text-lg md:text-xl mb-6 md:mb-10 max-w-sm md:max-w-md">
+            <p className="text-gray-600 text-lg sm:text-xl md:text-xl leading-relaxed">
               Find skilled professionals, solve issues instantly, and connect in
               real-time.
             </p>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
               <Link
                 to="/register"
-                className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 sm:px-6 py-3 sm:py-3 rounded-full shadow-lg transition-transform transform hover:scale-105 text-sm sm:text-base w-full sm:w-auto"
+                className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-3.5 rounded-full shadow-lg transition-transform transform hover:scale-105 text-base"
               >
-                Sign Up <ArrowRight size={16} className="sm:w-5 sm:h-5" />
+                Sign Up <ArrowRight size={20} />
               </Link>
               <Link
                 to="/login"
-                className="border border-[#2EC4B6] text-[#2EC4B6] font-semibold px-4 sm:px-6 py-3 sm:py-3 rounded-full hover:bg-[#2EC4B6] hover:text-white transition-all text-sm sm:text-base w-full sm:w-auto text-center"
+                className="border-2 border-[#2EC4B6] text-[#2EC4B6] font-semibold px-8 py-3.5 rounded-full hover:bg-[#2EC4B6] hover:text-white transition-all text-base text-center"
               >
                 Login
               </Link>
             </div>
           </div>
 
-          {/* Right Side - Glassmorphism Card */}
-          <div className="hidden md:flex items-center justify-center h-full">
-            <div className="relative w-[450px] h-[300px] bg-white/10 backdrop-blur-lg rounded-3xl shadow-lg border border-white/20">
-              {/* Inner blurred circle */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#2EC4B6] rounded-full opacity-60 filter blur-3xl"></div>
+          {/* Right Side - Landing Illustration */}
+          <div className="hidden md:flex items-center justify-center h-full relative">
+            {/* Decorative background elements */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              {/* Large soft teal circle background */}
+              <div className="absolute w-[450px] h-[450px] bg-[#A8E6E3]/30 rounded-full blur-2xl"></div>
+
+              {/* Left side - Small teal circle near wrench */}
+              <div className="absolute left-12 top-1/3 w-3 h-3 bg-[#2EC4B6] rounded-full"></div>
+              <div className="absolute left-6 top-1/2 w-32 h-32 bg-teal-50/60 rounded-full"></div>
+
+              {/* Top left - Simple cloud */}
+              <div className="absolute top-16 left-8 w-16 h-10 bg-white/70 rounded-full"></div>
+              <div className="absolute top-14 left-4 w-12 h-8 bg-white/70 rounded-full"></div>
+
+              {/* Top right - Yellow dots */}
+              <div className="absolute top-12 right-16 w-2.5 h-2.5 bg-yellow-400 rounded-full"></div>
+              <div className="absolute top-24 right-20 w-2 h-2 bg-yellow-300 rounded-full"></div>
+
+              {/* Right side - Light bulb area circle */}
+              <div className="absolute right-8 top-1/4 w-28 h-28 bg-orange-50/50 rounded-full"></div>
+
+              {/* Right side large teal circle */}
+              <div className="absolute right-4 top-1/3 w-20 h-20 bg-[#2EC4B6]/15 rounded-full"></div>
+
+              {/* Bottom left - Simple cloud */}
+              <div className="absolute bottom-20 left-2 w-18 h-11 bg-white/60 rounded-full"></div>
+              <div className="absolute bottom-18 left-0 w-14 h-9 bg-white/60 rounded-full"></div>
+
+              {/* Bottom right - Wavy lines */}
+              <div className="absolute bottom-12 right-4 w-20 h-20 opacity-25">
+                <svg
+                  viewBox="0 0 100 100"
+                  className="w-full h-full text-gray-300"
+                >
+                  <path
+                    d="M10,40 Q30,30 50,40 T90,40"
+                    stroke="currentColor"
+                    fill="none"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M10,55 Q30,45 50,55 T90,55"
+                    stroke="currentColor"
+                    fill="none"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M10,70 Q30,60 50,70 T90,70"
+                    stroke="currentColor"
+                    fill="none"
+                    strokeWidth="2"
+                  />
+                </svg>
+              </div>
             </div>
+
+            {/* Main illustration - positioned above decorations */}
+            <img
+              src={LandingImage}
+              alt="Skilled professionals illustration"
+              className="relative z-10 w-[520px] max-w-full h-auto object-contain drop-shadow-xl select-none pointer-events-none"
+              draggable={false}
+            />
           </div>
         </main>
       </div>
